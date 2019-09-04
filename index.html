@@ -127,6 +127,8 @@ canvas.height = 4096;
 const ctx = canvas.getContext('2d');
 ctx.fillStyle = 'white';
 ctx.fillRect(0, 0, canvas.width, canvas.height);
+ctx.translate(0, canvas.height);
+ctx.scale(1, -1);
 
 window.render = async (htmlString, width, height) => {
   await loadPromise;
@@ -222,7 +224,7 @@ window.render = async (htmlString, width, height) => {
       img.onload = () => {
         console.log('got img time', Date.now() - start);
         ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, img.naturalWidth, img.naturalHeight);
+        const imageData = ctx.getImageData(0, canvas.height - img.naturalHeight, img.naturalWidth, img.naturalHeight);
         const {width, height, data} = imageData;
         accept([null, {width, height, data}]);
 
