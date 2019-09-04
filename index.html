@@ -140,6 +140,9 @@ window.render = async (htmlString, width, height) => {
     const html = body.parentNode;
     // console.log('got dom', html);
 
+    document.head.appendChild(head);
+    document.body.appendChild(body);
+
     const styles = [];
     Array.from(html.querySelectorAll('style')).forEach(style => {
       styles.push(style.textContent);
@@ -251,6 +254,9 @@ window.render = async (htmlString, width, height) => {
     });
 
     // console.log('got 4', !!error, !!result);
+
+    document.head.removeChild(head);
+    document.body.removeChild(body);
 
     error = o[0];
     result = o[1];
