@@ -8550,7 +8550,7 @@
     font-style: normal;
     font-weight: normal;
     font-display:auto;
-    src: url2(https://render.exokit.xyz/fa-brands-400.woff2) format("woff2")
+    src: url2(fa-brands-400.woff2) format("woff2")
 }
 
 .fab {
@@ -8562,7 +8562,7 @@
     font-style: normal;
     font-weight: 900;
     font-display:auto;
-    src: url2(https://render.exokit.xyz/fa-duotone-900.woff2) format("woff2")
+    src: url2(fa-duotone-900.woff2) format("woff2")
 }
 
 .fad {
@@ -15207,7 +15207,7 @@
     font-style: normal;
     font-weight: 300;
     font-display:auto;
-    src: url(https://render.exokit.xyz/fa-light-300.woff2) format("woff2")
+    src: url(fa-light-300.woff2) format("woff2")
 }
 
 .fal {
@@ -15219,7 +15219,7 @@
     font-style: normal;
     font-weight: 400;
     font-display:auto;
-    src: url2(https://render.exokit.xyz/fa-regular-400.woff2) format("woff2")
+    src: url2(fa-regular-400.woff2) format("woff2")
 }
 
 .fal,.far {
@@ -15235,7 +15235,7 @@
     font-style: normal;
     font-weight: 900;
     font-display:auto;
-    src: url2(https://render.exokit.xyz/fa-solid-900.woff2) format("woff2")
+    src: url2(fa-solid-900.woff2) format("woff2")
 }
 
 .fa,.fas {

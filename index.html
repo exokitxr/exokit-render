@@ -64,7 +64,67 @@ const base64 = (function(){
   };
 })();
 
+const fontFiles = [
+  'mem5YaGs126MiZpBA-UN_r8OUuhp.woff2',
+  'fa-brands-400.woff2',
+  'fa-duotone-900.woff2',
+  'fa-light-300.woff2',
+  'fa-regular-400.woff2',
+  'fa-solid-900.woff2',
+  'font-awesome.css',
+];
+const cssFiles = [
+  'open-sans.css',
+  'font-awesome.css',
+];
+const fontFileCache = {};
+const cssFileCache = {};
+let stylePrefix;
+
+const loadPromise = Promise.all(
+  fontFiles.map(u =>
+    fetch(u)
+      .then(res => res.arrayBuffer())
+      .then(arraybuffer => base64.encode(arraybuffer))
+      .then(b64 => {
+        fontFileCache[u] = b64;
+      })
+  ).concat(cssFiles.map(u =>
+    fetch(u)
+      .then(res => res.text())
+      .then(text => {
+        cssFileCache[u] = text;
+      })
+  ))
+).then(async () => {
+  for (const k in cssFileCache) {
+    let s = cssFileCache[k];
+
+    const regex = /(url\()([^\)]+)(\))/g;
+    let match;
+    while (match = regex.exec(s)) {
+      // const res = await fetch(match[2]);
+      // if (res.status >= 200 && res.status < 300) {
+        // const arraybuffer = await res.arrayBuffer();
+        // const b64 = base64.encode(arraybuffer);
+        const b64 = fontFiles[match[2]];
+        const inner = match[1] + '"data:font/woff;charset=utf-8;base64,' + b64 + '"' + match[3];
+        s = s.slice(0, match.index) + inner + s.slice(match.index + match[0].length);
+        regex.lastIndex = match.index + inner.length;
+      /* } else {
+        return Promise.reject(new Error(`invalid status code: ${res.status}`));
+      } */
+    }
+
+    cssFileCache[k] = s;
+  }
+
+  stylePrefix = Object.keys(cssFileCache).map(k => `<style>${cssFileCache[k]}</style>`).join('');
+});
+
 window.addEventListener('message', async e => {
+  await loadPromise;
+
   let error, result, port;
   try {
     const {data} = e;
@@ -82,7 +142,7 @@ window.addEventListener('message', async e => {
       Array.from(html.querySelectorAll('style')).forEach(style => {
         styles.push(style.textContent);
       });
-      await Promise.all(Array.from(html.querySelectorAll('link')).map(link => new Promise((accept, reject) => {
+      /* await Promise.all(Array.from(html.querySelectorAll('link')).map(link => new Promise((accept, reject) => {
         if (link.rel === 'stylesheet' && link.href) {
           fetch(link.href)
             .then(res => {
@@ -122,7 +182,7 @@ window.addEventListener('message', async e => {
         } else {
           accept();
         }
-      })));
+      }))); */
 
       Array.from(html.querySelectorAll('script')).forEach(script => {
         script.parentNode.removeChild(script);
@@ -148,22 +208,16 @@ window.addEventListener('message', async e => {
         const start = Date.now();
 
         const img = new Image();
-        img.src = ('data:image/svg+xml;charset=utf-8,' +
+        img.src = 'data:image/svg+xml;charset=utf-8,' +
           '<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'' + width + '\' height=\'' + height + '\'>' +
+            stylePrefix + 
             styles.map(style => '<style>' + style.replace(/#/g, '%23') + '</style>').join('') +
             '<foreignObject width=\'100%\' height=\'100%\' x=\'0\' y=\'0\' style=\'background-color: white;\'>' +
-              /* '<style>' +
-                'x-row { display: block; }' +
-                'x-row:empty::before { content: \' \'; }' +
-              '</style>' + */
-              // new XMLSerializer().serializeToString(head) +
-              // '<head><style>lol{}\n</style></head>' +
               new XMLSerializer().serializeToString(body) +
-              // src.replace(/^<body/, '<div').replace(/<\/body>$/, '</div>') +
             '</foreignObject>' +
           '</svg>'
-        )// .replace(/\n/g, '');
-        console.log('got src', img.src);
+        // .replace(/\n/g, '');
+        // console.log('got src', img.src);
         img.crossOrigin = 'Anonymous';
         img.onload = () => {
           console.log('got img time', Date.now() - start);
