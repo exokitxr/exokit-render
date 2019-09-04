@@ -209,42 +209,43 @@ window.render = async (htmlString, width, height) => {
     const o = await new Promise((accept, reject) => {
       const start = Date.now();
 
+      const div = document.createElement('div');
+      const src = div.innerHTML = '<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'' + width + '\' height=\'' + height + '\'>' +
+        stylePrefix +
+        styles.map(style => '<style>' + style.replace(/#/g, '%23') + '</style>').join('') +
+        '<foreignObject width=\'100%\' height=\'100%\' x=\'0\' y=\'0\' style=\'background-color: white;\'>' +
+          new XMLSerializer().serializeToString(body) +
+        '</foreignObject>' +
+      '</svg>';
+      const svg = div.childNodes[0];
+
       const img = new Image();
-      img.src = 'data:image/svg+xml;charset=utf-8,' +
-        '<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'' + width + '\' height=\'' + height + '\'>' +
-          stylePrefix + 
-          styles.map(style => '<style>' + style.replace(/#/g, '%23') + '</style>').join('') +
-          '<foreignObject width=\'100%\' height=\'100%\' x=\'0\' y=\'0\' style=\'background-color: white;\'>' +
-            new XMLSerializer().serializeToString(body) +
-          '</foreignObject>' +
-        '</svg>'
-      // .replace(/\n/g, '');
-      // console.log('got src', img.src);
-      // img.crossOrigin = 'Anonymous';
+      img.src = 'data:image/svg+xml;charset=utf-8,' + src;
+
+      document.body.appendChild(svg);
+
       img.onload = () => {
-        console.log('got img time', Date.now() - start);
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, canvas.height - img.naturalHeight, img.naturalWidth, img.naturalHeight);
-        const {width, height, data} = imageData;
-
-        document.head.appendChild(head);
-        document.body.appendChild(body);
-
         const anchors = ['a', 'input']
-          .flatMap(q => Array.from(body.querySelectorAll(q)))
+          .flatMap(q => Array.from(svg.querySelectorAll(q)))
           .map(el => {
             const {id} = el;
             if (!id) {
               console.warn('anchor missing id', el);
             }
-            const rect = JSON.parse(JSON.stringify(el.getBoundingClientRect()));
+            console.log('got bbox', el.getBBox());
+            const rect = JSON.parse(JSON.stringify(el.getBBox()));
             return Object.assign(rect, {id});
           });
 
-        document.head.removeChild(head);
-        document.body.removeChild(body);
+        console.log('got img time', Date.now() - start);
+
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, canvas.height - img.naturalHeight, img.naturalWidth, img.naturalHeight);
+        const {width, height, data} = imageData;
 
         accept([null, {width, height, data, anchors}]);
+
+        document.body.removeChild(svg);
 
         /* createImageBitmap(img).then(imageBitmap => {
           // console.log('got image bitmap', imageBitmap.width, imageBitmap.height);
