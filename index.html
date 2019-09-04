@@ -85,15 +85,14 @@ const loadPromise = Promise.all(
   fontFiles.map(u =>
     fetch(u)
       .then(res => res.arrayBuffer())
-      .then(arraybuffer => base64.encode(arraybuffer))
-      .then(b64 => {
-        fontFileCache[u] = b64;
+      .then(arraybuffer => {
+        fontFileCache[u] = base64.encode(arraybuffer);
       })
   ).concat(cssFiles.map(u =>
     fetch(u)
       .then(res => res.text())
       .then(text => {
-        cssFileCache[u] = text;
+        cssFileCache[u] = text.replace(/#/g, '%23');
       })
   ))
 ).then(async () => {
