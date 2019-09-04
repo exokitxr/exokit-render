@@ -257,7 +257,7 @@ window.addEventListener('message', async e => {
     if (htmlString && isFinite(width) && isFinite(height) && port) {
       const {error, result} = await window.render(htmlString, width, height);
       if (error || result) {
-        port.postMessage({error, result}, [result.data]);
+        port.postMessage({error, result}, [result.data.buffer]);
       }
     }
   }
