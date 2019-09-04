@@ -226,7 +226,7 @@ window.render = async (htmlString, width, height) => {
         ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, canvas.height - img.naturalHeight, img.naturalWidth, img.naturalHeight);
         const {width, height, data} = imageData;
-        accept([null, {width, height, data}]);
+        accept([null, {width, height, data, anchors}]);
 
         /* createImageBitmap(img).then(imageBitmap => {
           // console.log('got image bitmap', imageBitmap.width, imageBitmap.height);
@@ -237,6 +237,17 @@ window.render = async (htmlString, width, height) => {
         console.warn('img error', err);
         accept([err.stack, null]);
       };
+
+      const anchors = ['a', 'input']
+        .flatMap(q => Array.from(body.querySelectorAll(q)))
+        .map(el => {
+          const {id} = el;
+          if (!id) {
+            console.warn('anchor missing id', el);
+          }
+          const rect = JSON.parse(JSON.stringify(el.getBoundingClientRect()));
+          return Object.assign(rect, {id});
+        });
     });
 
     // console.log('got 4', !!error, !!result);
