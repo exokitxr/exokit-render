@@ -211,7 +211,7 @@ window.render = async (htmlString, width, height) => {
         '</svg>'
       // .replace(/\n/g, '');
       // console.log('got src', img.src);
-      img.crossOrigin = 'Anonymous';
+      // img.crossOrigin = 'Anonymous';
       img.onload = () => {
         console.log('got img time', Date.now() - start);
 
