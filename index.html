@@ -121,6 +121,13 @@ const loadPromise = Promise.all(
   stylePrefix = Object.keys(cssFileCache).map(k => `<style>${cssFileCache[k]}</style>`).join('');
 });
 
+const canvas = document.createElement('canvas');
+canvas.width = 4096;
+canvas.height = 4096;
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = 'white';
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
 window.render = async (htmlString, width, height) => {
   await loadPromise;
 
@@ -214,22 +221,15 @@ window.render = async (htmlString, width, height) => {
       // img.crossOrigin = 'Anonymous';
       img.onload = () => {
         console.log('got img time', Date.now() - start);
-
-        /* const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth;
-        canvas.height = img.naturalHeight;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const {width, height, data} = imageData;
-        accept([null, {width, height, data}]); */
+        accept([null, {width, height, data}]);
 
-        createImageBitmap(img).then(imageBitmap => {
+        /* createImageBitmap(img).then(imageBitmap => {
           // console.log('got image bitmap', imageBitmap.width, imageBitmap.height);
           accept([null, imageBitmap]);
-        });
+        }); */
       };
       img.onerror = err => {
         console.warn('img error', err);
@@ -257,7 +257,7 @@ window.addEventListener('message', async e => {
     if (htmlString && isFinite(width) && isFinite(height) && port) {
       const {error, result} = await window.render(htmlString, width, height);
       if (error || result) {
-        port.postMessage({error, result});
+        port.postMessage({error, result}, [result.data]);
       }
     }
   }
