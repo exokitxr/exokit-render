@@ -193,7 +193,7 @@ window.render = async (htmlString, width, height) => {
     // console.log('got 2');
 
     await Promise.all(Array.from(html.querySelectorAll('img')).map(img => new Promise((accept, reject) => {
-      if (img.src) {
+      if (img.src && !img.complete) {
         img.onload = accept;
         img.onerror = err => {
           console.warn(err);
