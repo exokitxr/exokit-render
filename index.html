@@ -245,11 +245,6 @@ window.render = async (htmlString, width, height) => {
         document.body.removeChild(body);
 
         accept([null, {width, height, data, anchors}]);
-
-        /* createImageBitmap(img).then(imageBitmap => {
-          // console.log('got image bitmap', imageBitmap.width, imageBitmap.height);
-          accept([null, imageBitmap]);
-        }); */
       };
       img.onerror = err => {
         console.warn('img error', err);
