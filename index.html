@@ -63,6 +63,11 @@ const base64 = (function(){
     decode,
   };
 })();
+const _getProxyUrl = src => {
+  const parsedUrl = new URL(src);
+  parsedUrl.host = parsedUrl.host.replace(/-/g, '--');
+  return 'https://' + parsedUrl.origin.replace(/^(https?):\/\//, '$1-').replace(/:([0-9]+)$/, '-$1').replace(/\./g, '-') + '.proxy.exokit.org' + parsedUrl.pathname + parsedUrl.search;
+};
 
 const fontFiles = [
   'mem5YaGs126MiZpBA-UN_r8OUuhp.woff2',
@@ -192,17 +197,52 @@ window.render = async (htmlString, width, height) => {
 
     // console.log('got 2');
 
-    await Promise.all(Array.from(html.querySelectorAll('img')).map(img => new Promise((accept, reject) => {
-      if (img.src && !img.complete) {
-        img.onload = accept;
-        img.onerror = err => {
-          console.warn(err);
-          accept();
-        };
-      } else {
-        accept();
-      }
-    })));
+    await Promise.all(
+      Array.from(html.querySelectorAll('img'))
+        .map(img =>
+          new Promise((accept, reject) => {
+            if (img.src) {
+              const src = _getProxyUrl(img.src);
+
+              const newImg = new Image();
+              newImg.crossOrigin = 'Anonymous';
+              newImg.onload = () => {
+                accept(newImg);
+              };
+              newImg.onerror = err => {
+                console.warn(err);
+                accept(null);
+              };
+              newImg.src = src;
+            } else {
+              accept(img);
+            }
+          })
+          .then(oldImg => new Promise((accept, reject) => {
+            if (oldImg) {
+              const canvas = document.createElement('canvas');
+              canvas.width = oldImg.width;
+              canvas.height = oldImg.height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(oldImg, 0, 0);
+              const dataURL = canvas.toDataURL('image/png');
+
+              const newImg = new Image();
+              newImg.onload = () => {
+                img.replaceWith(newImg);
+                accept();
+              };
+              newImg.onerror = err => {
+                console.warn(err);
+                accept();
+              };
+              newImg.src = dataURL;
+            } else {
+              accept();
+            }
+          }))
+        )
+    );
 
     // console.log('got 3');
 
