@@ -305,7 +305,7 @@ window.render = async (htmlString, width, height) => {
 
 let running = false;
 const queue = [];
-const _handleMessage = data => {
+const _handleMessage = async data => {
   if (!running) {
     running = true;
 
@@ -326,7 +326,7 @@ const _handleMessage = data => {
     queue.push(data);
   }
 };
-window.addEventListener('message', async e => {
+window.addEventListener('message', e => {
   const {data} = e;
 
   if (data) {
