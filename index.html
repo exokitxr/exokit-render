@@ -250,14 +250,14 @@ window.render = async (htmlString, width, height) => {
       const start = Date.now();
 
       const img = new Image();
-      img.src = 'data:image/svg+xml;charset=utf-8,' +
+      img.src = ('data:image/svg+xml;charset=utf-8,' +
         '<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'' + width + '\' height=\'' + height + '\'>' +
           stylePrefix + 
-          styles.map(style => '<style>' + style.replace(/#/g, '%23') + '</style>').join('') +
+          styles.map(style => '<style>' + style + '</style>').join('') +
           '<foreignObject width=\'100%\' height=\'100%\' x=\'0\' y=\'0\' style=\'background-color: white;\'>' +
             new XMLSerializer().serializeToString(body) +
           '</foreignObject>' +
-        '</svg>'
+        '</svg>').replace(/#/g, '%23');
       // .replace(/\n/g, '');
       // console.log('got src', img.src);
       // img.crossOrigin = 'Anonymous';
