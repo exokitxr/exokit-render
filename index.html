@@ -310,17 +310,14 @@ const _handleMessage = async data => {
     running = true;
 
     const {htmlString, width, height, port} = data;
+    const {error, result} = await window.render(htmlString, width, height);
+    if (error || result) {
+      port.postMessage({error, result}, [result.data.buffer]);
+    }
 
-    if (htmlString && isFinite(width) && isFinite(height) && port) {
-      const {error, result} = await window.render(htmlString, width, height);
-      if (error || result) {
-        port.postMessage({error, result}, [result.data.buffer]);
-      }
-
-      running = false;
-      if (queue.length > 0) {
-        _handleMessage(queue.shift());
-      }
+    running = false;
+    if (queue.length > 0) {
+      _handleMessage(queue.shift());
     }
   } else {
     queue.push(data);
@@ -330,7 +327,11 @@ window.addEventListener('message', e => {
   const {data} = e;
 
   if (data) {
-    _handleMessage(data);
+    const {htmlString, width, height, port} = data;
+
+    if (htmlString && isFinite(width) && isFinite(height) && port) {
+      _handleMessage(data);
+    }
   }
 });
 
