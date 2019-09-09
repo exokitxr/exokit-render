@@ -303,10 +303,12 @@ window.render = async (htmlString, width, height) => {
   return {error, result};
 };
 
-window.addEventListener('message', async e => {
-  const {data} = e;
+let running = false;
+const queue = [];
+const _handleMessage = data => {
+  if (!running) {
+    running = true;
 
-  if (data) {
     const {htmlString, width, height, port} = data;
 
     if (htmlString && isFinite(width) && isFinite(height) && port) {
@@ -314,7 +316,21 @@ window.addEventListener('message', async e => {
       if (error || result) {
         port.postMessage({error, result}, [result.data.buffer]);
       }
+
+      running = false;
+      if (queue.length > 0) {
+        _handleMessage(queue.shift());
+      }
     }
+  } else {
+    queue.push(data);
+  }
+};
+window.addEventListener('message', async e => {
+  const {data} = e;
+
+  if (data) {
+    _handleMessage(data);
   }
 });
 
