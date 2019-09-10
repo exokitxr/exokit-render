@@ -265,7 +265,8 @@ window.render = async (htmlString, width, height) => {
         console.log('got img time', Date.now() - start);
         ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, canvas.height - img.naturalHeight, img.naturalWidth, img.naturalHeight);
-        const {width, height, data} = imageData;
+        let {width, height, data} = imageData;
+        data = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 
         document.head.appendChild(head);
         document.body.appendChild(body);
