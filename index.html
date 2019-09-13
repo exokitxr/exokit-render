@@ -1,7 +1,9 @@
 <!doctype html>
 <html>
 <body>
-<script>
+<script type=module>
+import Mustache from './mustache.js';
+
 const base64 = (function(){
   var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -135,12 +137,13 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 ctx.translate(0, canvas.height);
 ctx.scale(1, -1);
 
-window.render = async (htmlString, width, height) => {
+window.render = async (htmlString, templateData, width, height) => {
   await loadPromise;
 
   let error, result;
   try {
-    const dom = new DOMParser().parseFromString(htmlString, 'text/html');
+    const renderedHtmlString = templateData ? Mustache.render(htmlString, templateData) : htmlString;
+    const dom = new DOMParser().parseFromString(renderedHtmlString, 'text/html');
     const {head, body} = dom;
     const html = body.parentNode;
     // console.log('got dom', html);
@@ -310,8 +313,8 @@ const _handleMessage = async data => {
   if (!running) {
     running = true;
 
-    const {htmlString, width, height, port} = data;
-    const {error, result} = await window.render(htmlString, width, height);
+    const {htmlString, templateData, width, height, port} = data;
+    const {error, result} = await window.render(htmlString, templateData, width, height);
     if (error || result) {
       port.postMessage({error, result}, [result.data.buffer]);
     }
