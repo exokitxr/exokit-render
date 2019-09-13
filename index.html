@@ -134,8 +134,8 @@ canvas.height = 2048;
 const ctx = canvas.getContext('2d');
 ctx.fillStyle = 'white';
 ctx.fillRect(0, 0, canvas.width, canvas.height);
-ctx.translate(0, canvas.height);
-ctx.scale(1, -1);
+// ctx.translate(0, canvas.height);
+// ctx.scale(1, -1);
 
 window.render = async (htmlString, templateData, width, height) => {
   await loadPromise;
