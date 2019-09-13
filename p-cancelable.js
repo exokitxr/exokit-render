@@ -1,5 +1,3 @@
-'use strict';
-
 class CancelError extends Error {
 	constructor(reason) {
 		super(reason || 'Promise was canceled');
@@ -26,7 +24,7 @@ class PCancelable {
 		this._cancelHandlers = [];
 		this._isPending = true;
 		this._isCanceled = false;
-		this._rejectOnCancel = true;
+		// this._rejectOnCancel = true;
 
 		this._promise = new Promise((resolve, reject) => {
 			this._reject = reject;
@@ -49,14 +47,14 @@ class PCancelable {
 				this._cancelHandlers.push(handler);
 			};
 
-			Object.defineProperties(onCancel, {
+			/* Object.defineProperties(onCancel, {
 				shouldReject: {
 					get: () => this._rejectOnCancel,
 					set: boolean => {
 						this._rejectOnCancel = boolean;
 					}
 				}
-			});
+			}); */
 
 			return executor(onResolve, onReject, onCancel);
 		});
@@ -91,9 +89,9 @@ class PCancelable {
 		}
 
 		this._isCanceled = true;
-		if (this._rejectOnCancel) {
+		/* if (this._rejectOnCancel) {
 			this._reject(new CancelError(reason));
-		}
+		} */
 	}
 
 	get isCanceled() {
@@ -103,5 +101,7 @@ class PCancelable {
 
 Object.setPrototypeOf(PCancelable.prototype, Promise.prototype);
 
-module.exports = PCancelable;
-module.exports.CancelError = CancelError;
+export {
+  PCancelable,
+  CancelError,
+};
