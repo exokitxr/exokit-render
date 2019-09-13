@@ -3,6 +3,7 @@
 <body>
 <script type=module>
 import Mustache from './mustache.js';
+import {PCancelable} from './p-cancelable.js';
 
 const base64 = (function(){
   var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -137,8 +138,14 @@ ctx.fillRect(0, 0, canvas.width, canvas.height);
 // ctx.translate(0, canvas.height);
 // ctx.scale(1, -1);
 
-window.render = async (htmlString, templateData, width, height) => {
+window.render = (htmlString, templateData, width, height) => new PCancelable((accept, reject, onCancel) => {
+let cancelled = false;
+onCancel(() => {
+  cancelled = true;
+});
+(async () => {
   await loadPromise;
+  if (cancelled) return;
 
   let error, result;
   try {
@@ -246,6 +253,7 @@ window.render = async (htmlString, templateData, width, height) => {
           }))
         )
     );
+    if (cancelled) return;
 
     // console.log('got 3');
 
@@ -295,6 +303,7 @@ window.render = async (htmlString, templateData, width, height) => {
         accept([err.stack, null]);
       };
     });
+    if (cancelled) return;
 
     // console.log('got 4', !!error, !!result);
 
@@ -305,37 +314,61 @@ window.render = async (htmlString, templateData, width, height) => {
   }
 
   return {error, result};
-};
+})()
+  .then(accept, reject);
+});
 
-let running = false;
+let currentPromise = null;
 const queue = [];
 const _handleMessage = async data => {
-  if (!running) {
-    running = true;
+  const {method} = data;
 
-    const {htmlString, templateData, width, height, port} = data;
-    const {error, result} = await window.render(htmlString, templateData, width, height);
-    if (error || result) {
-      port.postMessage({error, result}, [result.data.buffer]);
-    }
+  switch (method) {
+    case 'render': {
+      if (!currentPromise) {
+        const {id, htmlString, templateData, width, height, port} = data;
+        const localCurrentPromise = currentPromise = window.render(htmlString, templateData, width, height);
+        localCurrentPromise.id = id;
+        const o = await localCurrentPromise;
+        if (localCurrentPromise === currentPromise) {
+          const {error, result} = o;
+          if (error || result) {
+            port.postMessage({error, result}, [result.data.buffer]);
+          }
 
-    running = false;
-    if (queue.length > 0) {
-      _handleMessage(queue.shift());
+          currentPromise = null;
+          if (queue.length > 0) {
+            _handleMessage(queue.shift());
+          }
+        }
+      } else {
+        queue.push(data);
+      }
+      break;
     }
-  } else {
-    queue.push(data);
+    case 'cancel': {
+      const {id} = data;
+      if (currentPromise && currentPromise.id === id) {
+        currentPromise.cancel();
+        currentPromise = null;
+
+        if (queue.length > 0) {
+          _handleMessage(queue.shift());
+        }
+      } else {
+        const index = queue.findIndex(e => e.id === id);
+        if (index !== -1) {
+          queue.splice(index, 1);
+        }
+      }
+      break;
+    }
   }
 };
 window.addEventListener('message', e => {
   const {data} = e;
-
-  if (data) {
-    const {htmlString, width, height, port} = data;
-
-    if (htmlString && isFinite(width) && isFinite(height) && port) {
-      _handleMessage(data);
-    }
+  if (data && data.method) {
+    _handleMessage(data);
   }
 });
 
