@@ -211,7 +211,7 @@ onCancel(() => {
       Array.from(html.querySelectorAll('img'))
         .map(img =>
           new Promise((accept, reject) => {
-            if (img.src) {
+            if (img.src && /^https?:/.test(img.src)) {
               const src = _getProxyUrl(img.src);
 
               const newImg = new Image();
@@ -225,7 +225,7 @@ onCancel(() => {
               };
               newImg.src = src;
             } else {
-              accept(img);
+              accept(null);
             }
           })
           .then(oldImg => new Promise((accept, reject) => {
