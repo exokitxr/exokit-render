@@ -273,6 +273,8 @@ onCancel(() => {
       // console.log('got src', img.src);
       // img.crossOrigin = 'Anonymous';
       img.onload = () => {
+        if (cancelled) return;
+
         console.log('got img time', Date.now() - start);
         ctx.drawImage(img, 0, 0);
         const imageData = ctx.getImageData(0, canvas.height - img.naturalHeight, img.naturalWidth, img.naturalHeight);
@@ -349,8 +351,9 @@ const _handleMessage = async data => {
     case 'cancel': {
       const {id} = data;
       if (currentPromise && currentPromise.id === id) {
-        currentPromise.cancel();
+        const localCurrentPromise = currentPromise;
         currentPromise = null;
+        localCurrentPromise.cancel();
 
         if (queue.length > 0) {
           _handleMessage(queue.shift());
