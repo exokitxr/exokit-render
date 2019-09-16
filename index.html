@@ -287,12 +287,12 @@ onCancel(() => {
         const anchors = ['a', 'input']
           .flatMap(q => Array.from(body.querySelectorAll(q)))
           .map(el => {
-            const {id, href} = el;
+            const {id, href, name} = el;
             if (!id && !href) {
               console.warn('anchor missing id or href', el);
             }
             const rect = JSON.parse(JSON.stringify(el.getBoundingClientRect()));
-            return Object.assign(rect, {id, href});
+            return Object.assign(rect, {id, href, name});
           });
 
         document.head.removeChild(head);
