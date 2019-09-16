@@ -277,7 +277,7 @@ onCancel(() => {
 
         console.log('got img time', Date.now() - start);
         ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, canvas.height - img.naturalHeight, img.naturalWidth, img.naturalHeight);
+        const imageData = ctx.getImageData(0, 0, img.naturalWidth, img.naturalHeight);
         let {width, height, data} = imageData;
         data = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 
