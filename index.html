@@ -138,7 +138,7 @@ const ctx = canvas.getContext('2d');
 // ctx.translate(0, canvas.height);
 // ctx.scale(1, -1);
 
-window.render = (htmlString, templateData, width, height) => new PCancelable((accept, reject, onCancel) => {
+window.render = (htmlString, templateData, width, height, transparent) => new PCancelable((accept, reject, onCancel) => {
 let cancelled = false;
 onCancel(() => {
   cancelled = true;
@@ -265,7 +265,7 @@ onCancel(() => {
         '<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'' + width + '\' height=\'' + height + '\'>' +
           stylePrefix + 
           styles.map(style => '<style>' + style + '</style>').join('') +
-          '<foreignObject width=\'100%\' height=\'100%\' x=\'0\' y=\'0\' style=\'background-color: white;\'>' +
+          '<foreignObject width=\'100%\' height=\'100%\' x=\'0\' y=\'0\'' + (transparent ? '' : ' style=\'background-color: white;\'') + '>'
             new XMLSerializer().serializeToString(body) +
           '</foreignObject>' +
         '</svg>').replace(/#/g, '%23');
@@ -328,8 +328,8 @@ const _handleMessage = async data => {
   switch (method) {
     case 'render': {
       if (!currentPromise) {
-        const {id, htmlString, templateData, width, height, port} = data;
-        const localCurrentPromise = currentPromise = window.render(htmlString, templateData, width, height);
+        const {id, htmlString, templateData, width, height, transparent, port} = data;
+        const localCurrentPromise = currentPromise = window.render(htmlString, templateData, width, height, transparent);
         localCurrentPromise.id = id;
         const o = await localCurrentPromise;
         if (localCurrentPromise === currentPromise) {
