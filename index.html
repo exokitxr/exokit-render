@@ -66,11 +66,11 @@ const base64 = (function(){
     decode,
   };
 })();
-const _getProxyUrl = src => {
+/* const _getProxyUrl = src => {
   const parsedUrl = new URL(src);
   parsedUrl.host = parsedUrl.host.replace(/-/g, '--');
   return 'https://' + parsedUrl.origin.replace(/^(https?):\/\//, '$1-').replace(/:([0-9]+)$/, '-$1').replace(/\./g, '-') + '.proxy.exokit.org' + parsedUrl.pathname + parsedUrl.search;
-};
+}; */
 
 const fontFiles = [
   /*'mem5YaGs126MiZpBA-UN_r8OUuhp.woff2',
@@ -209,7 +209,7 @@ onCancel(() => {
 
     // console.log('got 2');
 
-    await Promise.all(
+    /* await Promise.all(
       Array.from(html.querySelectorAll('img'))
         .map(img =>
           new Promise((accept, reject) => {
@@ -255,7 +255,7 @@ onCancel(() => {
           }))
         )
     );
-    if (cancelled) return;
+    if (cancelled) return; */
 
     // console.log('got 3');
 
