@@ -286,7 +286,7 @@ onCancel(() => {
             ctx.drawImage(img, 0, 0);
             const imageData = ctx.getImageData(0, 0, img.naturalWidth, img.naturalHeight);
             const {data} = imageData;
-            return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+            return Promise.resolve(new Uint8Array(data.buffer, data.byteOffset, data.byteLength));
           } else {
             return createImageBitmap(img);
           }
