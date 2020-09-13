@@ -140,7 +140,7 @@ const ctx = canvas.getContext('2d');
 // ctx.translate(0, canvas.height);
 // ctx.scale(1, -1);
 
-window.render = (htmlString, templateData, width, height, transparent) => new PCancelable((accept, reject, onCancel) => {
+window.render = (htmlString, templateData, width, height, transparent, bitmap) => new PCancelable((accept, reject, onCancel) => {
 let cancelled = false;
 onCancel(() => {
   cancelled = true;
@@ -278,30 +278,44 @@ onCancel(() => {
         if (cancelled) return;
 
         console.log('got img time', Date.now() - start);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-        const imageData = ctx.getImageData(0, 0, img.naturalWidth, img.naturalHeight);
-        let {width, height, data} = imageData;
-        data = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
 
-        document.head.appendChild(head);
-        document.body.appendChild(body);
+        const {naturalWidth: width, naturalHeight: height} = img;
+        (() => {
+          if (!bitmap) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+            const imageData = ctx.getImageData(0, 0, img.naturalWidth, img.naturalHeight);
+            const {data} = imageData;
+            return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+          } else {
+            return createImageBitmap(img);
+          }
+        })().then(data => {
+          if (cancelled) return;
 
-        const anchors = ['a', 'input']
-          .flatMap(q => Array.from(body.querySelectorAll(q)))
-          .map(el => {
-            const {id, href, name} = el;
-            if (!id && !href) {
-              console.warn('anchor missing id or href', el);
-            }
-            const rect = JSON.parse(JSON.stringify(el.getBoundingClientRect()));
-            return Object.assign(rect, {id, href, name});
-          });
+          document.head.appendChild(head);
+          document.body.appendChild(body);
 
-        document.head.removeChild(head);
-        document.body.removeChild(body);
+          const anchors = ['a', 'input']
+            .flatMap(q => Array.from(body.querySelectorAll(q)))
+            .map(el => {
+              const {id, href, name} = el;
+              if (!id && !href) {
+                console.warn('anchor missing id or href', el);
+              }
+              const rect = JSON.parse(JSON.stringify(el.getBoundingClientRect()));
+              return Object.assign(rect, {id, href, name});
+            });
 
-        accept([null, {width, height, data, anchors}]);
+          document.head.removeChild(head);
+          document.body.removeChild(body);
+
+          accept([null, {width, height, data, anchors}]);
+        }, err => {
+          if (cancelled) return;
+
+          accept([err.stack, null]);
+        });
       };
       img.onerror = err => {
         console.warn('img error', err);
@@ -331,14 +345,14 @@ const _handleMessage = async data => {
   switch (method) {
     case 'render': {
       if (!currentPromise) {
-        const {id, htmlString, templateData, width, height, transparent, port} = data;
-        const localCurrentPromise = currentPromise = window.render(htmlString, templateData, width, height, transparent);
+        const {id, htmlString, templateData, width, height, transparent, bitmap, port} = data;
+        const localCurrentPromise = currentPromise = window.render(htmlString, templateData, width, height, transparent, bitmap);
         localCurrentPromise.id = id;
         const o = await localCurrentPromise;
         if (localCurrentPromise === currentPromise) {
           const {error, result} = o;
           if (error || result) {
-            port.postMessage({error, result}, [result.data.buffer]);
+            port.postMessage({error, result}, [ArrayBuffer.isView(result.data) ? result.data.buffer : result.data]);
           }
 
           currentPromise = null;
