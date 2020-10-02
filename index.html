@@ -304,7 +304,7 @@ onCancel(() => {
           document.head.appendChild(head);
           document.body.appendChild(body);
 
-          const anchors = ['a', 'input']
+          const anchors = ['a', 'nav', 'input']
             .flatMap(q => Array.from(body.querySelectorAll(q)))
             .map(el => {
               const {id, href, name} = el;
