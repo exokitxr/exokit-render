@@ -264,6 +264,10 @@ onCancel(() => {
       Array.from(html.querySelectorAll('img'))
         .map(async img => {
           const dataUrl = await _getImgDataUrl(img.src);
+          if (!dataUrl) {
+            console.warn('fail', img, img.src, dataUrl);
+            debugger;
+          }
 
           await new Promise((accept, reject) => {
             const newImg = new Image();
