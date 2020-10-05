@@ -152,12 +152,12 @@ const imgCache = new lruCache({
   max: 50,
 });
 const _getImgDataUrl = async src => {
-  const entry = imgCache.get(src);
-  if (entry) {
-    return entry;
-  } else {
-    const dataUrl = await new Promise((accept, reject) => {
-      if (src && /^https?:/.test(src)) {
+  if (src && /^https?:/.test(src)) {
+    const entry = imgCache.get(src);
+    if (entry) {
+      return entry;
+    } else {
+      const dataUrl = await new Promise((accept, reject) => {
         const newImg = new Image();
         newImg.crossOrigin = 'Anonymous';
         newImg.onload = () => {
@@ -168,26 +168,25 @@ const _getImgDataUrl = async src => {
           accept(null);
         };
         newImg.src = src;
-      } else {
-        accept(null);
-      }
-    })
-    .then(oldImg => {
-      if (oldImg) {
-        const canvas = document.createElement('canvas');
-        canvas.width = oldImg.width;
-        canvas.height = oldImg.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(oldImg, 0, 0);
-        const dataURL = canvas.toDataURL('image/png');
-
-        return dataURL;
-      } else {
-        return oldImg;
-      }
-    });
-    imgCache.set(src, dataUrl);
-    return dataUrl;
+      })
+      .then(oldImg => {
+        if (oldImg) {
+          const canvas = document.createElement('canvas');
+          canvas.width = oldImg.width;
+          canvas.height = oldImg.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(oldImg, 0, 0);
+          const dataURL = canvas.toDataURL('image/png');
+          return dataURL;
+        } else {
+          return null;
+        }
+      });
+      dataUrl && imgCache.set(src, dataUrl);
+      return dataUrl;
+    }
+  } else {
+    return src;
   }
 };
 
@@ -264,10 +263,10 @@ onCancel(() => {
       Array.from(html.querySelectorAll('img'))
         .map(async img => {
           const dataUrl = await _getImgDataUrl(img.src);
-          if (!dataUrl) {
+          /* if (!dataUrl) {
             console.warn('fail', img, img.src, dataUrl);
             debugger;
-          }
+          } */
 
           await new Promise((accept, reject) => {
             const newImg = new Image();
