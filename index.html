@@ -11,6 +11,7 @@ body {
 <script type=module>
 import Mustache from './mustache.js';
 import {PCancelable} from './p-cancelable.js';
+import lruCache from './lru-cache.js';
 
 const base64 = (function(){
   var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -147,6 +148,49 @@ const ctx = canvas.getContext('2d');
 // ctx.translate(0, canvas.height);
 // ctx.scale(1, -1);
 
+const imgCache = new lruCache({
+  max: 50,
+});
+const _getImgDataUrl = async src => {
+  const entry = imgCache.get(src);
+  if (entry) {
+    return entry;
+  } else {
+    const dataUrl = await new Promise((accept, reject) => {
+      if (src && /^https?:/.test(src)) {
+        const newImg = new Image();
+        newImg.crossOrigin = 'Anonymous';
+        newImg.onload = () => {
+          accept(newImg);
+        };
+        newImg.onerror = err => {
+          console.warn(err);
+          accept(null);
+        };
+        newImg.src = src;
+      } else {
+        accept(null);
+      }
+    })
+    .then(oldImg => {
+      if (oldImg) {
+        const canvas = document.createElement('canvas');
+        canvas.width = oldImg.width;
+        canvas.height = oldImg.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(oldImg, 0, 0);
+        const dataURL = canvas.toDataURL('image/png');
+
+        return dataURL;
+      } else {
+        return oldImg;
+      }
+    });
+    imgCache.set(src, dataUrl);
+    return dataUrl;
+  }
+};
+
 window.render = (htmlString, templateData, width, height, transparent, bitmap) => new PCancelable((accept, reject, onCancel) => {
 let cancelled = false;
 onCancel(() => {
@@ -218,49 +262,22 @@ onCancel(() => {
 
     await Promise.all(
       Array.from(html.querySelectorAll('img'))
-        .map(img =>
-          new Promise((accept, reject) => {
-            if (img.src && /^https?:/.test(img.src)) {
-              const src = img.src; // _getProxyUrl(img.src);
+        .map(async img => {
+          const dataUrl = await _getImgDataUrl(img.src);
 
-              const newImg = new Image();
-              newImg.crossOrigin = 'Anonymous';
-              newImg.onload = () => {
-                accept(newImg);
-              };
-              newImg.onerror = err => {
-                console.warn(err);
-                accept(null);
-              };
-              newImg.src = src;
-            } else {
-              accept(null);
-            }
-          })
-          .then(oldImg => new Promise((accept, reject) => {
-            if (oldImg) {
-              const canvas = document.createElement('canvas');
-              canvas.width = oldImg.width;
-              canvas.height = oldImg.height;
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(oldImg, 0, 0);
-              const dataURL = canvas.toDataURL('image/png');
-
-              const newImg = new Image();
-              newImg.onload = () => {
-                img.replaceWith(newImg);
-                accept();
-              };
-              newImg.onerror = err => {
-                console.warn(err);
-                accept();
-              };
-              newImg.src = dataURL;
-            } else {
+          await new Promise((accept, reject) => {
+            const newImg = new Image();
+            newImg.onload = () => {
+              img.replaceWith(newImg);
               accept();
-            }
-          }))
-        )
+            };
+            newImg.onerror = err => {
+              console.warn(err);
+              accept();
+            };
+            newImg.src = dataUrl;
+          });
+        })
     );
     if (cancelled) return;
 
