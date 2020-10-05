@@ -280,7 +280,7 @@ onCancel(() => {
               };
             }
           }).then(oldImg => new Promise((accept, reject) => {
-            if (oldImg) {
+            if (oldImg && oldImg.src && /^https?:/.test(oldImg.src)) {
               const canvas = document.createElement('canvas');
               canvas.width = oldImg.width;
               canvas.height = oldImg.height;
@@ -298,6 +298,8 @@ onCancel(() => {
                 accept();
               };
               newImg.src = dataURL;
+            } else {
+              accept();
             }
           }))
         )
