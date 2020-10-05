@@ -216,12 +216,12 @@ onCancel(() => {
 
     // console.log('got 2');
 
-    /* await Promise.all(
+    await Promise.all(
       Array.from(html.querySelectorAll('img'))
         .map(img =>
           new Promise((accept, reject) => {
             if (img.src && /^https?:/.test(img.src)) {
-              const src = _getProxyUrl(img.src);
+              const src = img.src; // _getProxyUrl(img.src);
 
               const newImg = new Image();
               newImg.crossOrigin = 'Anonymous';
@@ -239,48 +239,6 @@ onCancel(() => {
           })
           .then(oldImg => new Promise((accept, reject) => {
             if (oldImg) {
-              const canvas = document.createElement('canvas');
-              canvas.width = oldImg.width;
-              canvas.height = oldImg.height;
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(oldImg, 0, 0);
-              const dataURL = canvas.toDataURL('image/png');
-
-              const newImg = new Image();
-              newImg.onload = () => {
-                img.replaceWith(newImg);
-                accept();
-              };
-              newImg.onerror = err => {
-                console.warn(err);
-                accept();
-              };
-              newImg.src = dataURL;
-            } else {
-              accept();
-            }
-          }))
-        )
-    );
-    if (cancelled) return; */
-
-    await Promise.all(
-      Array.from(html.querySelectorAll('img'))
-        .map(img =>
-          new Promise((accept, reject) => {
-            if (img.complete) {
-              accept(img);
-            } else {
-              img.onload = () => {
-                accept(img);
-              };
-              img.onerror = err => {
-                console.warn(err);
-                accept(null);
-              };
-            }
-          }).then(oldImg => new Promise((accept, reject) => {
-            if (oldImg && oldImg.src && /^https?:/.test(oldImg.src)) {
               const canvas = document.createElement('canvas');
               canvas.width = oldImg.width;
               canvas.height = oldImg.height;
