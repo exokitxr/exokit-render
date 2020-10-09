@@ -5,6 +5,9 @@
 body {
   margin: 0;
 }
+* {
+  box-sizing: border-box;
+}
 </style>
 </head>
 <body>
@@ -136,7 +139,7 @@ const loadPromise = Promise.all(
     cssFileCache[k] = s;
   }
 
-  stylePrefix = `<style>body {margin: 0;}</style>` + Object.keys(cssFileCache).map(k => `<style>${cssFileCache[k]}</style>`).join('');
+  stylePrefix = `<style>body {margin: 0;} * {box-sizing: border-box;}</style>` + Object.keys(cssFileCache).map(k => `<style>${cssFileCache[k]}</style>`).join('');
 });
 
 const canvas = document.createElement('canvas');
