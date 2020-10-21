@@ -273,6 +273,7 @@ onCancel(() => {
 
           await new Promise((accept, reject) => {
             const newImg = new Image();
+            newImg.setAttribute('class', img.getAttribute('class'));
             newImg.onload = () => {
               img.replaceWith(newImg);
               accept();
